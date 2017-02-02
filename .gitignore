@@ -1,0 +1,11 @@
+/vendor
+composer.lock
+.DS_Store
+Thumbs.db
+.idea/
+config.php
+/extLib
+/tests
+phpUnit.xml.dist
+/src/Parser/Cache
+/src/Parser/Config
