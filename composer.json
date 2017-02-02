@@ -2,7 +2,6 @@
     "name": "pegaz69695/parser",
     "require": {
         "php": ">=5.4",
-        "imangazaliev/didom": "*",
         "chuyskywalker/rolling-curl": "*"
     },
     "authors": [
