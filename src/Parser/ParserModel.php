@@ -3,14 +3,20 @@ namespace Parser;
 
 use RollingCurl\RollingCurl;
 use RollingCurl\Request;
+use Parser\DataProviderInterface;
 use InvalidArgumentException;
 
-abstract class ParserModel extends OpenCartDataProvider
+/**
+ *
+ * @property DataProviderInterface $provider
+ */
+abstract class ParserModel
 {
     public $items = [];
     protected $itemPosition = 0;
     protected $productsToAdd = [];
     protected $productsToUpdate = [];
+    protected $provider;
 
     public $configDir = '../Config/';
     public $cacheDir = 'E:\OpenServer\domains\parser.dev\src\Parser\Cache/';
@@ -26,7 +32,25 @@ abstract class ParserModel extends OpenCartDataProvider
 
     const LOAD_PAGE_TO_ADD = true;
     const LOAD_PAGE_TO_UPDATE = false;
-    
+
+    public function __construct()
+    {
+        $this->setProvider($this->getProvider());
+    }
+
+    /**
+     * @return OpenCartDataProvider
+     */
+    protected function getProvider()
+    {
+        return new OpenCartDataProvider();
+    }
+
+    protected function setProvider(DataProviderInterface $provider)
+    {
+        $this->provider = $provider;
+    }
+
     /*
      *  Этап 1
      *  Получение ссылок для парсинга и сохранение в бд
@@ -44,7 +68,7 @@ abstract class ParserModel extends OpenCartDataProvider
             } else {
                 $categoryList = '';
             }
-            $this->save(1, $returnItem['link'], $categoryList);
+            $this->provider->save(1, $returnItem['link'], $categoryList);
         }
         $this->items = [];
         return $this;
@@ -57,7 +81,7 @@ abstract class ParserModel extends OpenCartDataProvider
     public function getPagination($limit = 2)
     {
         if (count(($this->items)) < 1) {
-            $this->items = $this->find(static::SEARCH_STRING, 1);
+            $this->items = $this->provider->find(static::SEARCH_STRING, 1);
         }
         
         switch (static::PARSER_TYPE) {
@@ -66,13 +90,13 @@ abstract class ParserModel extends OpenCartDataProvider
                 break;
             case self::PARSER_TYPE_CURL:
                 $this->getCurlPages($limit, $this->getCurlOptions(),
-                    function(Request $request, RollingCurl $rollingCurl) {
+                    function(Request $request) {
                         $item = $request->getExtraInfo();
                         $returnItems = $this->findDonorPagination($request->getResponseText(), $item);
                         foreach ($returnItems as $returnItem) {
-                            $this->save(2, $returnItem['link'], $returnItem['categoryList'], $returnItem['data']);
+                            $this->provider->save(2, $returnItem['link'], $returnItem['categoryList'], $returnItem['data']);
                         }
-                        $this->update($item['id']);
+                        $this->provider->update($item['id']);
                     });
                 break;
             
@@ -87,7 +111,7 @@ abstract class ParserModel extends OpenCartDataProvider
     public function getProductList($limit = 2)
     {
         if (count(($this->items)) < 1) {
-            $this->items = $this->find(static::SEARCH_STRING, 2);
+            $this->items = $this->provider->find(static::SEARCH_STRING, 2);
         }
 
         switch (static::PARSER_TYPE) {
@@ -96,13 +120,13 @@ abstract class ParserModel extends OpenCartDataProvider
                 break;
             case self::PARSER_TYPE_CURL:
                 $this->getCurlPages($limit, $this->getCurlOptions(),
-                    function(Request $request, RollingCurl $rollingCurl) {
+                    function(Request $request) {
                         $item = $request->getExtraInfo();
                         $returnItems = $this->findProductList($request->getResponseText(), $item);
                         foreach ($returnItems as $returnItem) {
-                            $this->save(3, $returnItem['link'], $returnItem['categoryList'], $returnItem['data']);
+                            $this->provider->save(3, $returnItem['link'], $returnItem['categoryList'], $returnItem['data']);
                         }
-                        $this->update($item['id']);
+                        $this->provider->update($item['id']);
                         unset($item, $returnItems, $request);
                     });
                 break;
@@ -118,11 +142,11 @@ abstract class ParserModel extends OpenCartDataProvider
     public function getProduct($limit = 2)
     {
         if (count(($this->items)) < 1) {
-            $this->items = $this->find(static::SEARCH_STRING, 3);
+            $this->items = $this->provider->find(static::SEARCH_STRING, 3);
         }
 
         foreach ($this->items as $key => $item) {
-            $productId = $this->findProduct('sku', "ur_{$item['data']['sku']}");
+            $productId = $this->provider->findProduct('sku', "ur_{$item['data']['sku']}");
             if($productId) {
                 $item['productId'] = $productId;
                 $this->productsToUpdate[] = $item;
@@ -158,11 +182,11 @@ abstract class ParserModel extends OpenCartDataProvider
 //                $this->getCurlPages($limit, $this->getCurlOptions(),
 //                    function(Request $request, RollingCurl $rollingCurl) {
 //                        $item = $request->getExtraInfo();
-//                        $returnItems = $this->findProductList($request->getResponseText(), $item);
+//                        $returnItems = $this->provider->findProductList($request->getResponseText(), $item);
 //                        foreach ($returnItems as $returnItem) {
-//                            $this->save(2, $returnItem['link'], $returnItem['categoryList'], $returnItem['data']);
+//                            $this->provider->save(2, $returnItem['link'], $returnItem['categoryList'], $returnItem['data']);
 //                        }
-//                        $this->update($item['id']);
+//                        $this->provider->update($item['id']);
 //                        unset($item, $returnItems, $request);
 //                    });
 //                break;
