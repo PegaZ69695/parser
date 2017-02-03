@@ -52,6 +52,15 @@ abstract class ParserModel
     }
 
     /*
+     *  Этап 0
+     *  Очистка базы
+     * */
+    public function clearDb(){
+        $this->provider->clearDb();
+        return $this;
+    }
+
+    /*
      *  Этап 1
      *  Получение ссылок для парсинга и сохранение в бд
      * */
