@@ -6,7 +6,7 @@
  * Time: 10:09
  */
 
-namespace Parser;
+namespace Parser\DataProvider;
 
 use Parser\Product\ProductModel;
 

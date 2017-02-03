@@ -3,7 +3,7 @@ namespace Parser;
 
 use RollingCurl\RollingCurl;
 use RollingCurl\Request;
-use Parser\DataProviderInterface;
+use Parser\DataProvider\DataProviderInterface;
 use InvalidArgumentException;
 
 /**
@@ -39,11 +39,11 @@ abstract class ParserModel
     }
 
     /**
-     * @return OpenCartDataProvider
+     * @return \Parser\DataProvider\OpenCartDataProvider
      */
     protected function getProvider()
     {
-        return new OpenCartDataProvider();
+        return new \Parser\DataProvider\OpenCartDataProvider();
     }
 
     protected function setProvider(DataProviderInterface $provider)

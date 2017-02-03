@@ -1,5 +1,5 @@
 <?php
-namespace Parser;
+namespace Parser\DataProvider;
 
 use DB;
 use Parser\Product\ProductModel;
@@ -59,7 +59,7 @@ class OpenCartDataProvider implements DataProviderInterface
         $sql = "SELECT *
                 FROM `{$this->tableName()}`
                 WHERE `link` LIKE '%{$like_}%' AND `type` = '{$type_}' AND `state` = '$active'";
-        if (is_int($limit)){
+        if (is_int($limit)) {
             $sql .= " LIMIT $limit";
         }
         $query = $this->db->query($sql);
@@ -198,14 +198,14 @@ class OpenCartDataProvider implements DataProviderInterface
             $query .= " AND p.product_id = pd.product_id";
         }
         $productCategory = $product->getProductCategory();
-        
+
         $query = $this->db->query("SELECT GROUP_CONCAT(category_id SEPARATOR '_') as categorylist
                FROM `" . DB_PREFIX . "product_to_category`
                where product_id = '{$product->getProductId()}'");
         if (strrpos($query->row['categorylist'], '1399') !== false) {
             $productCategory .= ',1399';
         }
-        
+        $this->updateProductToCategory($productCategory, $product->getProductId());
     }
 
     protected function updateProductToCategory($category_id, $product_id)
