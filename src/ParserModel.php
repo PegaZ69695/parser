@@ -250,7 +250,7 @@ abstract class ParserModel
         
         $rollingCurl->setCallback(function(Request $request, RollingCurl $rollingCurl) use (&$results, &$closure) {
             if ($request->getResponseInfo()['http_code'] !== 200) {
-                throw new \RuntimeException(sprintf('HTTP response code %s', $request->getResponseInfo()['http_code']));
+                throw new \RuntimeException(sprintf('Request URL:%s' . PHP_EOL . 'Status Code:%s', $request->getUrl(),  $request->getResponseInfo()['http_code']));
             }
             if (!trim($request->getResponseText())) {
                 throw new \RuntimeException($request->getResponseError());
