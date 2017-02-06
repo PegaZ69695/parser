@@ -24,7 +24,8 @@ abstract class ParserModel
     public $currency = DB_CURRENCY;
     const PARSER_TYPE_CURL = 'curl';
     const PARSER_TYPE_DEFAULT = 'default';
-
+    const STATUS_ACTIVE = 0;
+    const STATUS_INACTIVE = 0;
     const PARSER_TYPE = 'default';
 
     const MAIN_CATEGORY_ID = 0;
@@ -87,10 +88,10 @@ abstract class ParserModel
      *  Этап 2
      *  Получение ссылок на страницы категории и сохранение в бд
      * */
-    public function getPagination($limit = 2)
+    public function getPagination($limit = null)
     {
         if (count(($this->items)) < 1) {
-            $this->items = $this->provider->find(static::SEARCH_STRING, 1);
+            $this->items = $this->provider->find(static::SEARCH_STRING, 1, self::STATUS_ACTIVE, $limit);
         }
         
         switch (static::PARSER_TYPE) {
@@ -98,7 +99,7 @@ abstract class ParserModel
                     /*   code */
                 break;
             case self::PARSER_TYPE_CURL:
-                $this->getCurlPages($limit, $this->getCurlOptions(),
+                $this->getCurlPages(false, $this->getCurlOptions(),
                     function(Request $request) {
                         $item = $request->getExtraInfo();
                         $returnItems = $this->findDonorPagination($request->getResponseText(), $item);
@@ -117,10 +118,10 @@ abstract class ParserModel
      *  Этап 3
      *  Получение списка продуктов и сохранение в бд
      * */
-    public function getProductList($limit = 2)
+    public function getProductList($limit = null)
     {
         if (count(($this->items)) < 1) {
-            $this->items = $this->provider->find(static::SEARCH_STRING, 2);
+            $this->items = $this->provider->find(static::SEARCH_STRING, 2, self::STATUS_ACTIVE, $limit);
         }
 
         switch (static::PARSER_TYPE) {
@@ -128,7 +129,7 @@ abstract class ParserModel
                 /*   code */
                 break;
             case self::PARSER_TYPE_CURL:
-                $this->getCurlPages($limit, $this->getCurlOptions(),
+                $this->getCurlPages(false, $this->getCurlOptions(),
                     function(Request $request) {
                         $item = $request->getExtraInfo();
                         $returnItems = $this->findProductList($request->getResponseText(), $item);
@@ -148,10 +149,10 @@ abstract class ParserModel
      *  Этап 4
      *  Получение данных продукта и сохранение или обновление в бд
      * */
-    public function getProduct($limit = 2)
+    public function getProduct($limit = null)
     {
         if (count(($this->items)) < 1) {
-            $this->items = $this->provider->find(static::SEARCH_STRING, 3);
+            $this->items = $this->provider->find(static::SEARCH_STRING, 3, self::STATUS_ACTIVE, $limit);
         }
 
         foreach ($this->items as $key => $item) {
