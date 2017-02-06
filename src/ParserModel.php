@@ -249,7 +249,7 @@ abstract class ParserModel
         $this->items = [];
         
         $rollingCurl->setCallback(function(Request $request, RollingCurl $rollingCurl) use (&$results, &$closure) {
-            if (!trim($request->getResponseText())) {
+            if (($request->getResponseText()['http_code'] !== 200) || !trim($request->getResponseText())) {
                 throw new \RuntimeException($request->getResponseError());
             }
             if (!empty($closure)) {
