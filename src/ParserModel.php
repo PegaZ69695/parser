@@ -171,6 +171,7 @@ abstract class ParserModel
 
             } else {
                 $this->updateProduct(null, $item);
+                $this->provider->update($item['id']);
             }
 
             unset($this->productsToUpdate[$key]);
@@ -181,27 +182,10 @@ abstract class ParserModel
 
             } else {
                 $this->addProduct(null, $item);
+                $this->provider->update($item['id']);
             }
             unset($this->productsToAdd[$key]);
         }
-//        switch (static::PARSER_TYPE) {
-//            case self::PARSER_TYPE_DEFAULT:
-//                /*   code */
-//                break;
-//            case self::PARSER_TYPE_CURL:
-//                $this->getCurlPages($limit, $this->getCurlOptions(),
-//                    function(Request $request, RollingCurl $rollingCurl) {
-//                        $item = $request->getExtraInfo();
-//                        $returnItems = $this->provider->findProductList($request->getResponseText(), $item);
-//                        foreach ($returnItems as $returnItem) {
-//                            $this->provider->save(2, $returnItem['link'], $returnItem['categoryList'], $returnItem['data']);
-//                        }
-//                        $this->provider->update($item['id']);
-//                        unset($item, $returnItems, $request);
-//                    });
-//                break;
-//
-//        }
         return $this;
     }
     
