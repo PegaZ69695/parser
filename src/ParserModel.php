@@ -21,7 +21,7 @@ abstract class ParserModel
     public $configDir = '../Config/';
     public $cacheDir = 'E:\OpenServer\domains\parser.dev\src\Parser\Cache/';
     
-    public $currency = DB_CURRENCY;
+    public $currency = 1;
     const PARSER_TYPE_CURL = 'curl';
     const PARSER_TYPE_DEFAULT = 'default';
     const STATUS_ACTIVE = 0;
@@ -37,8 +37,18 @@ abstract class ParserModel
     public function __construct()
     {
         $this->setProvider($this->getProvider());
+        return $this;
+    }
+    
+    protected function setCurrency($value = 1)
+    {
+        $this->currency = $value;
     }
 
+    protected function getCurrency()
+    {
+        return $this->currency;
+    }
     /**
      * @return \Parser\DataProvider\OpenCartDataProvider
      */
@@ -50,6 +60,7 @@ abstract class ParserModel
     protected function setProvider(DataProviderInterface $provider)
     {
         $this->provider = $provider;
+        return $this;
     }
 
     /*
@@ -189,7 +200,8 @@ abstract class ParserModel
         return $this;
     }
     
-    protected function findProduct($item){
+    protected function findProduct($item)
+    {
         return $this->provider->findProduct('sku', "{$item['data']['sku']}");
     }
 
