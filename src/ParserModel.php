@@ -156,7 +156,7 @@ abstract class ParserModel
         }
 
         foreach ($this->items as $key => $item) {
-            $productId = $this->provider->findProduct('sku', "ur_{$item['data']['sku']}");
+            $productId = $this->findProduct($item);
             if($productId) {
                 $item['productId'] = $productId;
                 $this->productsToUpdate[] = $item;
@@ -203,6 +203,10 @@ abstract class ParserModel
 //
 //        }
         return $this;
+    }
+    
+    protected function findProduct($item){
+        return $this->provider->findProduct('sku', "{$item['data']['sku']}");
     }
 
     public static function recursive_array_search($needle, $haystack, $currentKey = '') {
