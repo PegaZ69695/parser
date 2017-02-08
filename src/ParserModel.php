@@ -39,7 +39,7 @@ abstract class ParserModel
         $this->setProvider($this->getProvider());
         return $this;
     }
-    
+
     protected function setCurrency($value = 1)
     {
         $this->currency = $value;
@@ -249,7 +249,7 @@ abstract class ParserModel
         $this->items = [];
         
         $rollingCurl->setCallback(function(Request $request, RollingCurl $rollingCurl) use (&$results, &$closure) {
-            if ($request->getResponseInfo()['http_code'] !== 200) {
+            if ($request->getResponseInfo()['http_code'] >= 400) {
                 throw new \RuntimeException(sprintf('Request URL:%s' . PHP_EOL . 'Status Code:%s', $request->getUrl(),  $request->getResponseInfo()['http_code']));
             }
             if (!trim($request->getResponseText())) {
