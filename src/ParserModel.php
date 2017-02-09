@@ -145,18 +145,23 @@ abstract class ParserModel
                 /*   code */
                 break;
             case self::PARSER_TYPE_CURL:
-                $this->getCurlPages(false, $this->getCurlOptions(),
-                    function(Request $request) {
-                        $item = $request->getExtraInfo();
-                        $returnItems = $this->findProductList($request->getResponseText(), $item);
-                        foreach ($returnItems as $returnItem) {
-                            $this->provider->save(3, $returnItem['link'], $returnItem['categoryList'], $returnItem['data']);
-                        }
-                        $this->provider->update($item['id']);
-                        unset($item, $returnItems, $request);
-                    });
+                try {
+                    $this->getCurlPages(false, $this->getCurlOptions(),
+                        function(Request $request) {
+                            $item = $request->getExtraInfo();
+                            $returnItems = $this->findProductList($request->getResponseText(), $item);
+                            foreach ($returnItems as $returnItem) {
+                                $this->provider->save(3, $returnItem['link'], $returnItem['categoryList'], $returnItem['data']);
+                            }
+                            $this->provider->update($item['id']);
+                            unset($item, $returnItems, $request);
+                        });
+                } catch (\RuntimeException $e) {
+                    $item = array_shift($this->items);
+                    $this->provider->update($item['id']);
+                    throw $e;
+                }
                 break;
-
         }
         return $this;
     }
@@ -253,7 +258,7 @@ abstract class ParserModel
             );
         }
 
-        $this->items = [];
+
         
         $rollingCurl->setCallback(function(Request $request, RollingCurl $rollingCurl) use (&$results, &$closure) {
             if ($request->getResponseInfo()['http_code'] >= 400) {
@@ -267,6 +272,7 @@ abstract class ParserModel
             } else {
                 $results[] = $request->getResponseText();
             }
+            array_shift($this->items);
             $rollingCurl->clearCompleted();
             $rollingCurl->prunePendingRequestQueue();
         });
