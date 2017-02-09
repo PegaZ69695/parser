@@ -13,6 +13,7 @@ use InvalidArgumentException;
 abstract class ParserModel
 {
     public $items = [];
+    public $thisStatus = 0;
     protected $itemPosition = 0;
     protected $productsToAdd = [];
     protected $productsToUpdate = [];
@@ -101,8 +102,10 @@ abstract class ParserModel
      * */
     public function getPagination($limit = null)
     {
-        if (count(($this->items)) < 1) {
-            $this->items = $this->provider->find(static::SEARCH_STRING, 1, self::STATUS_ACTIVE, $limit);
+        $this->thisStatus = 1;
+        if ($this->items = $this->provider->find(static::SEARCH_STRING, 1, self::STATUS_ACTIVE, $limit)) {
+            $this->thisStatus = 0;
+            return $this;
         }
         
         switch (static::PARSER_TYPE) {
@@ -131,8 +134,10 @@ abstract class ParserModel
      * */
     public function getProductList($limit = null)
     {
-        if (count(($this->items)) < 1) {
-            $this->items = $this->provider->find(static::SEARCH_STRING, 2, self::STATUS_ACTIVE);
+        $this->thisStatus = 0;
+        if (!$this->items = $this->provider->find(static::SEARCH_STRING, 2, self::STATUS_ACTIVE)) {
+            $this->thisStatus = 1;
+            return $this;
         }
 
         switch (static::PARSER_TYPE) {
@@ -162,8 +167,10 @@ abstract class ParserModel
      * */
     public function getProduct($limit = null)
     {
-        if (count(($this->items)) < 1) {
-            $this->items = $this->provider->find(static::SEARCH_STRING, 3, self::STATUS_ACTIVE, $limit);
+        $this->thisStatus = 0;
+        if (!$this->items = $this->provider->find(static::SEARCH_STRING, 3, self::STATUS_ACTIVE, $limit)) {
+            $this->thisStatus = 1;
+            return $this;
         }
 
         foreach ($this->items as $key => $item) {
