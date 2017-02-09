@@ -26,7 +26,8 @@ abstract class ParserModel
     const PARSER_TYPE_CURL = 'curl';
     const PARSER_TYPE_DEFAULT = 'default';
     const STATUS_ACTIVE = 0;
-    const STATUS_INACTIVE = 0;
+    const STATUS_INACTIVE = 1;
+    const STATUS_ERROR = 2;
     const PARSER_TYPE = 'default';
 
     const MAIN_CATEGORY_ID = 0;
