@@ -135,7 +135,7 @@ abstract class ParserModel
     public function getProductList($limit = null)
     {
         $this->thisStatus = 0;
-        if (!$this->items = $this->provider->find(static::SEARCH_STRING, 2, self::STATUS_ACTIVE)) {
+        if (!$this->items = $this->provider->find(static::SEARCH_STRING, 2, self::STATUS_ACTIVE, $limit)) {
             $this->thisStatus = 1;
             return $this;
         }
@@ -145,7 +145,7 @@ abstract class ParserModel
                 /*   code */
                 break;
             case self::PARSER_TYPE_CURL:
-                $this->getCurlPages($limit, $this->getCurlOptions(),
+                $this->getCurlPages(false, $this->getCurlOptions(),
                     function(Request $request) {
                         $item = $request->getExtraInfo();
                         $returnItems = $this->findProductList($request->getResponseText(), $item);
