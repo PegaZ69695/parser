@@ -253,7 +253,7 @@ abstract class ParserModel
                 throw new \RuntimeException(sprintf('Request URL:%s' . PHP_EOL . 'Status Code:%s', $request->getUrl(),  $request->getResponseInfo()['http_code']));
             }
             if (!trim($request->getResponseText())) {
-                throw new \RuntimeException($request->getResponseError());
+                throw new \RuntimeException(sprintf('Request URL:%s' . PHP_EOL . 'Status Code:%s' . PHP_EOL . 'Error text:%s', $request->getUrl(),  $request->getResponseInfo()['http_code']), $request->getResponseError());
             }
             if (!empty($closure)) {
                 $closure($request, $rollingCurl);
