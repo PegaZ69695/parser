@@ -159,7 +159,7 @@ abstract class ParserModel
                         });
                 } catch (\RuntimeException $e) {
                     $item = array_shift($this->items);
-                    $this->provider->update($item['id']);
+                    $this->provider->update($item['id'], self::STATUS_ERROR);
                     throw $e;
                 }
                 break;
