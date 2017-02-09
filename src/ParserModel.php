@@ -103,7 +103,7 @@ abstract class ParserModel
     public function getPagination($limit = null)
     {
         $this->thisStatus = 0;
-        if ($this->items = $this->provider->find(static::SEARCH_STRING, 1, self::STATUS_ACTIVE, $limit)) {
+        if (!$this->items = $this->provider->find(static::SEARCH_STRING, 1, self::STATUS_ACTIVE, $limit)) {
             $this->thisStatus = 1;
             return $this;
         }
