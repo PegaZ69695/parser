@@ -150,6 +150,13 @@ abstract class ParserModel
                     $this->getCurlPages(false, $this->getCurlOptions(),
                         function(Request $request) {
                             $item = $request->getExtraInfo();
+
+                            if (!trim($request->getResponseText())) {
+                                $this->provider->update($item['id'], self::STATUS_ERROR);
+                                unset($this->items[$request->getExtraInfo()['key']]);
+                                throw new \RuntimeException(sprintf('Request URL:%s' . PHP_EOL . 'Status Code:%s' . PHP_EOL . 'Error text:%s', $request->getUrl(),  $request->getResponseInfo()['http_code'], $request->getResponseError()));
+                            }
+                            
                             $returnItems = $this->findProductList($request->getResponseText(), $item);
                             foreach ($returnItems as $returnItem) {
                                 $this->provider->save(3, $returnItem['link'], $returnItem['categoryList'], $returnItem['data']);
@@ -158,8 +165,7 @@ abstract class ParserModel
                             unset($item, $returnItems, $request);
                         });
                 } catch (\RuntimeException $e) {
-                    $item = array_shift($this->items);
-                    $this->provider->update($item['id'], self::STATUS_ERROR);
+
                     throw $e;
                 }
                 break;
@@ -249,10 +255,11 @@ abstract class ParserModel
 
         $rollingCurl = new RollingCurl();
 
-        foreach ($this->items as $item) {
+        foreach ($this->items as $key => $item) {
             $request = new Request($item['link'], 'POST');
             unset($item['link']);
             $request->setPostData($postData);
+            $item['key'] = $key;
             $request->setExtraInfo($item);
             $rollingCurl->add(
                 $request->addOptions($options)
@@ -265,15 +272,13 @@ abstract class ParserModel
             if ($request->getResponseInfo()['http_code'] >= 400) {
                 throw new \RuntimeException(sprintf('Request URL:%s' . PHP_EOL . 'Status Code:%s', $request->getUrl(),  $request->getResponseInfo()['http_code']));
             }
-            if (!trim($request->getResponseText())) {
-                throw new \RuntimeException(sprintf('Request URL:%s' . PHP_EOL . 'Status Code:%s' . PHP_EOL . 'Error text:%s', $request->getUrl(),  $request->getResponseInfo()['http_code'], $request->getResponseError()));
-            }
+
             if (!empty($closure)) {
                 $closure($request, $rollingCurl);
             } else {
                 $results[] = $request->getResponseText();
             }
-            array_shift($this->items);
+            unset($this->items[$request->getExtraInfo()['key']]);
             $rollingCurl->clearCompleted();
             $rollingCurl->prunePendingRequestQueue();
         });
