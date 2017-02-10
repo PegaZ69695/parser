@@ -54,8 +54,14 @@ class ProductModel
 
     public function setPrice($value = 0.00)
     {
+        $value = $this->priceRound($value);
         $this->price = $value < 10.00 ? $value * 1.1 : $value;
         return $this;
+    }
+
+    protected function priceRound($value)
+    {
+        return ceil($value * 100) / 100;
     }
 
     public function getPrice()
