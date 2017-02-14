@@ -9,14 +9,14 @@
 namespace Parser\DataProvider;
 
 use Parser\Product\ProductModel;
-use Parser\ParserModel;
+use Parser\ParserBase;
 
 interface DataProviderInterface
 {
     public function clearDb();
     public function save($type, $link, $categoryList, $data = null);
     public function getArrayCategoryIdByName($name);
-    public function update($id, $status = ParserModel::STATUS_INACTIVE);
+    public function update($id, $status = ParserBase::STATUS_INACTIVE);
     public function find($like_, $type_, $active = 0, $limit = null);
     public function findProduct($findField, $findValue);
     public function insertProductToDB(ProductModel $product);
