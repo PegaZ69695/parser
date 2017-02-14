@@ -53,7 +53,7 @@ abstract class ParserBase
      */
     protected function getProvider()
     {
-        return new \Parser\DataProvider\OpenCartDataProvider();
+        return null;
     }
 
     protected function setProvider(DataProviderInterface $provider)
