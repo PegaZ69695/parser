@@ -49,12 +49,9 @@ abstract class ParserBase
         return $this->currency;
     }
     /**
-     * @return \Parser\DataProvider\OpenCartDataProvider
+     * @return \Parser\DataProvider\DataProviderInterface
      */
-    protected function getProvider()
-    {
-        return null;
-    }
+    abstract protected function getProvider();
 
     protected function setProvider(DataProviderInterface $provider)
     {
