@@ -35,7 +35,6 @@ abstract class ParserBase
 
     public function __construct()
     {
-        $this->setProvider($this->getProvider());
         return $this;
     }
 
@@ -48,10 +47,6 @@ abstract class ParserBase
     {
         return $this->currency;
     }
-    /**
-     * @return \Parser\DataProvider\DataProviderInterface
-     */
-    abstract protected function getProvider();
 
     protected function setProvider(DataProviderInterface $provider)
     {
