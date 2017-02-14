@@ -14,7 +14,7 @@ abstract class ParserFile extends ParserBase
     /*  Этап 1
      *  Получение списка продуктов и сохранение в бд
      * */
-    public function getProductList($limit = null)
+    public function getProductList()
     {
         $this->items = $this->findProductList();
         foreach ($this->items as $returnItem) {
