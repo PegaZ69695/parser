@@ -208,4 +208,9 @@ abstract class ParserBase
     public function getCurlOptions(){
         return [];
     }
+    
+    public function setMenu()
+    {
+        return null;
+    }
 }
