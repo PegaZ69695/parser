@@ -33,9 +33,20 @@ abstract class ParserBase
     const LOAD_PAGE_TO_ADD = true;
     const LOAD_PAGE_TO_UPDATE = false;
 
-    public function __construct()
+    public function __construct($config =  [])
     {
-        return $this;
+        if (!empty($config)) {
+            self::configure($this, $config);
+        }
+    }
+
+    public static function configure($object, $properties)
+    {
+        foreach ($properties as $name => $value) {
+            $object->$name = $value;
+        }
+
+        return $object;
     }
 
     protected function setCurrency($value = 1)
