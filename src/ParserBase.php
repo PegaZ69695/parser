@@ -33,11 +33,6 @@ abstract class ParserBase
     const LOAD_PAGE_TO_ADD = true;
     const LOAD_PAGE_TO_UPDATE = false;
 
-    public function __construct()
-    {
-        return $this;
-    }
-
     protected function setCurrency($value = 1)
     {
         $this->currency = $value;
