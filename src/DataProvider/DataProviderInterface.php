@@ -23,4 +23,5 @@ interface DataProviderInterface
     public function updateProductToDB(ProductModel $product);
     public function hasCategoryParent($category_id, $parent_id);
     public function cloneDonorMenu($menuItems = null, $parentId = null);
+    public function disableOldProduct($vendorId, $days);
 }

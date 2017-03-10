@@ -206,6 +206,18 @@ abstract class ParserBase
      * */
     abstract public function updateProduct($htmlText, $item);
 
+    /**
+     * Отключение продуктов каторые не были обновлены в течении $day дней
+     *
+     * @param integer $days
+     * @param integer $vendorId
+     * @return boolean
+     * */
+    public function disableOldProduct($vendorId, $days = 1)
+    {
+        return $this->provider->disableOldProduct($vendorId, $days);
+    }
+
 
     public function getCurlOptions(){
         return [];
