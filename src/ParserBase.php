@@ -18,6 +18,8 @@ abstract class ParserBase
     protected $productsToAdd = [];
     protected $productsToUpdate = [];
     protected $provider;
+
+    protected $_vendorId;
     
     public $currency = 1;
     const PARSER_TYPE_CURL = 'curl';
@@ -27,7 +29,6 @@ abstract class ParserBase
     const STATUS_ERROR = 2;
     const PARSER_TYPE = 'default';
 
-    const MAIN_CATEGORY_ID = 0;
     const SEARCH_STRING = null;
 
     const LOAD_PAGE_TO_ADD = true;
