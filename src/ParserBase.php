@@ -42,6 +42,11 @@ abstract class ParserBase
         }
     }
 
+    public function getVendorId()
+    {
+        return $this->_vendorId;
+    }
+
     public static function configure($object, $properties)
     {
         foreach ($properties as $name => $value) {
