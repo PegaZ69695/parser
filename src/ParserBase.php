@@ -19,6 +19,7 @@ abstract class ParserBase
     protected $productsToUpdate = [];
     protected $provider;
 
+    protected $_mainCategoryId;
     protected $_vendorId;
     
     public $currency = 1;
