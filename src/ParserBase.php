@@ -106,7 +106,7 @@ abstract class ParserBase
 
         foreach ($this->productsToUpdate as $key => $item) {
             if (static::LOAD_PAGE_TO_UPDATE) {
-
+                /* code */
             } else {
                 $this->updateProduct(null, $item);
                 $this->provider->update($item['id']);
@@ -117,7 +117,7 @@ abstract class ParserBase
 
         foreach ($this->productsToAdd as $key => $item) {
             if (static::LOAD_PAGE_TO_ADD) {
-
+                /* code */
             } else {
                 $this->addProduct(null, $item);
                 $this->provider->update($item['id']);
@@ -165,7 +165,6 @@ abstract class ParserBase
 
         foreach ($this->items as $key => $item) {
             $request = new Request($item['link'], 'POST');
-            unset($item['link']);
             $request->setPostData($postData);
             $item['key'] = $key;
             $request->setExtraInfo($item);
