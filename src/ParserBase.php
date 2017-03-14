@@ -95,7 +95,7 @@ abstract class ParserBase
 
         foreach ($this->items as $key => $item) {
             $productId = $this->findProduct($item);
-            if($productId) {
+            if ($productId) {
                 $item['productId'] = $productId;
                 $this->productsToUpdate[] = $item;
             } else {
@@ -104,26 +104,55 @@ abstract class ParserBase
             unset($this->items[$key]);
         }
 
-        foreach ($this->productsToUpdate as $key => $item) {
-            if (static::LOAD_PAGE_TO_UPDATE) {
-                /* code */
-            } else {
+        if (static::LOAD_PAGE_TO_UPDATE) {
+            switch (static::PARSER_TYPE) {
+                case self::PARSER_TYPE_DEFAULT:
+                    /*   code */
+                    break;
+                case self::PARSER_TYPE_CURL:
+                    $this->items = $this->productsToUpdate;
+                    $this->productsToUpdate = [];
+                    $this->getCurlPages(false, $this->getCurlOptions(),
+                        function(Request $request) {
+                            $item = $request->getExtraInfo();
+                            $this->updateProduct($request->getResponseText(), $item);
+                            $this->provider->update($item['id']);
+                        });
+                    break;
+            }
+        } else {
+            foreach ($this->productsToUpdate as $key => $item) {
                 $this->updateProduct(null, $item);
                 $this->provider->update($item['id']);
-            }
 
-            unset($this->productsToUpdate[$key]);
+                unset($this->productsToUpdate[$key]);
+            }
         }
 
-        foreach ($this->productsToAdd as $key => $item) {
-            if (static::LOAD_PAGE_TO_ADD) {
-                /* code */
-            } else {
+        if (static::LOAD_PAGE_TO_ADD) {
+            switch (static::PARSER_TYPE) {
+                case self::PARSER_TYPE_DEFAULT:
+                    /*   code */
+                    break;
+                case self::PARSER_TYPE_CURL:
+                    $this->items = $this->productsToAdd;
+                    $this->productsToAdd = [];
+                    $this->getCurlPages(false, $this->getCurlOptions(),
+                        function(Request $request) {
+                            $item = $request->getExtraInfo();
+                            $this->addProduct($request->getResponseText(), $item);
+                            $this->provider->update($item['id']);
+                        });
+                    break;
+            }
+        } else {
+            foreach ($this->productsToAdd as $key => $item) {
                 $this->addProduct(null, $item);
                 $this->provider->update($item['id']);
+                unset($this->productsToAdd[$key]);
             }
-            unset($this->productsToAdd[$key]);
         }
+
         return $this;
     }
     
@@ -150,7 +179,7 @@ abstract class ParserBase
     public function getCurlPages($limit = false, $options = [], \Closure $closure)
     {
         if (!is_array($this->items)) {
-            throw new InvalidArgumentException(sprintf('this items expects  to be array, %s given', gettype($this->items)));
+            throw new InvalidArgumentException(sprintf('this items expects to be array, %s given', gettype($this->items)));
         }
 
         $results = [];
