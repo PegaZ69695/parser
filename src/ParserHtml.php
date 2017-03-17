@@ -128,18 +128,19 @@ abstract class ParserHtml extends ParserBase
      * */
     abstract public function findProductList($htmlText, $item);
 
-    public function setCookie($option)
+    public function setCookie($url, $options = [])
     {
         $curlOptions = $this->getCurlOptions();
         $curlOptions += [
             CURLOPT_HEADER => true,
             CURLOPT_NOBODY => true,
         ];
+        $curlOptions += $options;
         unset($curlOptions[CURLOPT_COOKIEFILE]);
         $rollingCurl = new RollingCurl();
         $rollingCurl
             ->addOptions([CURLOPT_COOKIEJAR => $this->getCookiePath()])
-            ->post($option['url'], $curlOptions[CURLOPT_POSTFIELDS], $curlOptions)
+            ->post($url, $curlOptions[CURLOPT_POSTFIELDS], $curlOptions)
             ->execute();
         return true;
     }
