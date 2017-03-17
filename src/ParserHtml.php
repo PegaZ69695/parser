@@ -140,9 +140,9 @@ abstract class ParserHtml extends ParserBase
         $rollingCurl = new RollingCurl();
         $rollingCurl
             ->post($option['url'], $curlOptions[CURLOPT_POSTFIELDS], $curlOptions)
-            /*->setCallback(function (Request $request, RollingCurl $rollingCurl) {
-                echo "Fetch complete for (" . $request->getUrl() . ")" . PHP_EOL;
-            })*/
+            ->setCallback(function (Request $request, RollingCurl $rollingCurl) {
+//                echo "Fetch complete for (" . $request->getUrl() . ")" . PHP_EOL;
+            })
             ->execute();
         return true;
     }
