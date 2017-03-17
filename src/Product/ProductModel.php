@@ -27,19 +27,7 @@ class ProductModel
     protected $brand;
     protected $production;
     protected $donor;
-
-    protected $dirImages;
     
-    public function __construct()
-    {
-        $this->setDirImages('../images/');
-    }
-
-    public function setDirImages($value)
-    {
-        $this->dirImages = $value;
-        return $this;
-    }
 
     public function setProductId($value)
     {
@@ -71,7 +59,7 @@ class ProductModel
 
     public function setSku($value)
     {
-        $this->sku = $value;
+        $this->sku = trim($value);
         return $this;
     }
 
@@ -82,7 +70,7 @@ class ProductModel
 
     public function setDonor($value)
     {
-        $this->donor = $value;
+        $this->donor = trim($value);
         return $this;
     }
 
@@ -93,7 +81,7 @@ class ProductModel
 
     public function setName($value)
     {
-        $this->name = $value;
+        $this->name = trim($value);
         return $this;
     }
 
@@ -104,7 +92,7 @@ class ProductModel
 
     public function setDescription($value)
     {
-        $this->description = $value;
+        $this->description = trim($value);
         return $this;
     }
 
@@ -129,32 +117,11 @@ class ProductModel
         if (!is_array($value)) {
             throw new \InvalidArgumentException(sprintf('%s expects parameter 1 to be array, %s given', __METHOD__, gettype($value)));
         }
-        if (!isset($this->dirImages)) {
-            throw new \InvalidArgumentException(sprintf('%s expects parameter 1 to be string path, %s given', __METHOD__, gettype($value)));
+
+        if (count($value)) {
+            $this->image = array_shift($value);
+            $this->images = $value;
         }
-        $images = [];
-        if($value !== null) {
-            foreach($value as $key => $image) {
-                $filename = explode('/', $image);
-                $filename = $prefix_ . end($filename);
-                $resultPath = "$filename";
-                if ($subDir != '') {
-                    if (!is_dir($this->dirImages . $subDir)) {
-                        mkdir($this->dirImages . "$subDir");
-                    }
-                    $resultPath = "$subDir/$filename";
-                } else {
-                    if (!is_dir($this->dirImages)) {
-                        mkdir($this->dirImages);
-                    }
-                }
-                $copy = $this->dirImages . $resultPath;
-                copy($image, $copy);
-                $images[] = $resultPath;
-            }
-        }
-        $this->image = array_shift($images);
-        $this->images = array_unique($images);
         return $this;
     }
 
