@@ -201,8 +201,6 @@ abstract class ParserBase
                 $request->addOptions($options)
             );
         }
-
-
         
         $rollingCurl->setCallback(function(Request $request, RollingCurl $rollingCurl) use (&$results, &$closure) {
             if ($request->getResponseInfo()['http_code'] >= 400) {

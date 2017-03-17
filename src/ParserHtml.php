@@ -12,6 +12,18 @@ use RollingCurl\Request;
 
 abstract class ParserHtml extends ParserBase
 {
+    protected $cookieDir;
+
+    protected function setCookieDir($value)
+    {
+        $this->cookieDir = $value;
+    }
+
+    protected function getCookieDir()
+    {
+        return $this->cookieDir;
+    }
+
     /*
     *  Этап 1
     *  Получение ссылок для парсинга и сохранение в бд
@@ -114,4 +126,9 @@ abstract class ParserHtml extends ParserBase
      *  Получение списка продуктов и сохранение в бд
      * */
     abstract public function findProductList($htmlText, $item);
+
+    public function setCookie($option)
+    {
+        return null;
+    }
 }
