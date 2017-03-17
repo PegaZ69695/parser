@@ -9,6 +9,7 @@
 namespace Parser;
 
 use RollingCurl\Request;
+use RollingCurl\RollingCurl;
 
 abstract class ParserHtml extends ParserBase
 {
@@ -129,6 +130,20 @@ abstract class ParserHtml extends ParserBase
 
     public function setCookie($option)
     {
-        return null;
+        $curlOptions = $this->getCurlOptions();
+        $curlOptions += [
+            CURLOPT_HEADER => true,
+            CURLOPT_NOBODY => true,
+            CURLOPT_COOKIEJAR => $this->getCookiePath(),
+        ];
+
+        $rollingCurl = new RollingCurl();
+        $rollingCurl
+            ->post($option['url'], $curlOptions[CURLOPT_POSTFIELDS], $curlOptions)
+            /*->setCallback(function (Request $request, RollingCurl $rollingCurl) {
+                echo "Fetch complete for (" . $request->getUrl() . ")" . PHP_EOL;
+            })*/
+            ->execute();
+        return true;
     }
 }
