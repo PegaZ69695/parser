@@ -12,16 +12,16 @@ use RollingCurl\Request;
 
 abstract class ParserHtml extends ParserBase
 {
-    protected $cookieDir;
+    protected $cookiePath;
 
-    protected function setCookieDir($value)
+    protected function setCookiePath($value)
     {
-        $this->cookieDir = $value;
+        $this->cookiePath = $value;
     }
 
-    protected function getCookieDir()
+    protected function getCookiePath()
     {
-        return $this->cookieDir;
+        return $this->cookiePath;
     }
 
     /*
