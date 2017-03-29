@@ -130,18 +130,29 @@ abstract class ParserHtml extends ParserBase
 
     public function setCookie($url, $options = [])
     {
-        $curlOptions = $this->getCurlOptions();
-        $curlOptions += [
+        $results = false;
+
+        $rollingCurl = new RollingCurl();
+        if (!is_string($url)) {
+            throw new \Exception('Need string url');
+        }
+        $request = new Request($url);
+        $options = array_merge($this->getCurlOptions(), [
             CURLOPT_HEADER => true,
             CURLOPT_NOBODY => true,
-        ];
-        $curlOptions += $options;
-        unset($curlOptions[CURLOPT_COOKIEFILE]);
-        $rollingCurl = new RollingCurl();
-        $rollingCurl
-            ->addOptions([CURLOPT_COOKIEJAR => $this->getCookiePath()])
-            ->post($url, $curlOptions[CURLOPT_POSTFIELDS], $curlOptions)
-            ->execute();
-        return true;
+            CURLOPT_COOKIEJAR => $this->getCookiePath()
+        ], $options);
+        unset($options[CURLOPT_COOKIEFILE]);
+        $request->setOptions($options);
+        $rollingCurl->add($request);
+        unset($request);
+        try {
+            $rollingCurl->execute();
+            $results = true;
+        } catch (\Exception $e) {
+
+        }
+        unset($rollingCurl);
+        return $results;
     }
 }
