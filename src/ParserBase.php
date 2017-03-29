@@ -103,7 +103,6 @@ abstract class ParserBase
             }
             unset($this->items[$key]);
         }
-
         if (static::LOAD_PAGE_TO_UPDATE) {
             switch (static::PARSER_TYPE) {
                 case self::PARSER_TYPE_DEFAULT:
@@ -124,11 +123,9 @@ abstract class ParserBase
             foreach ($this->productsToUpdate as $key => $item) {
                 $this->updateProduct(null, $item);
                 $this->provider->update($item['id']);
-
                 unset($this->productsToUpdate[$key]);
             }
         }
-
         if (static::LOAD_PAGE_TO_ADD) {
             switch (static::PARSER_TYPE) {
                 case self::PARSER_TYPE_DEFAULT:
@@ -204,6 +201,7 @@ abstract class ParserBase
         
         $rollingCurl->setCallback(function(Request $request, RollingCurl $rollingCurl) use (&$results, &$closure) {
             if ($request->getResponseInfo()['http_code'] >= 400) {
+                $this->provider->update($request->getExtraInfo()['id'], self::STATUS_ERROR);
                 throw new \RuntimeException(sprintf('Request URL:%s' . PHP_EOL . 'Status Code:%s', $request->getUrl(),  $request->getResponseInfo()['http_code']));
             }
 
