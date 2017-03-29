@@ -136,7 +136,7 @@ abstract class ParserHtml extends ParserBase
         if (!is_string($url)) {
             throw new \Exception('Need string url');
         }
-        $request = new Request($url);
+        $request = new Request($url, 'POST');
         $options = $this->getCurlOptions() + [
             CURLOPT_HEADER => true,
             CURLOPT_NOBODY => true,
