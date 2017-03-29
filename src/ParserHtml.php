@@ -137,11 +137,11 @@ abstract class ParserHtml extends ParserBase
             throw new \Exception('Need string url');
         }
         $request = new Request($url);
-        $options = array_merge($this->getCurlOptions(), [
+        $options = $this->getCurlOptions() + [
             CURLOPT_HEADER => true,
             CURLOPT_NOBODY => true,
             CURLOPT_COOKIEJAR => $this->getCookiePath()
-        ], $options);
+        ] + $options;
         unset($options[CURLOPT_COOKIEFILE]);
         $request->setOptions($options);
         $rollingCurl->add($request);
