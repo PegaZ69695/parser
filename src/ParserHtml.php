@@ -143,6 +143,7 @@ abstract class ParserHtml extends ParserBase
             CURLOPT_COOKIEJAR => $this->getCookiePath()
         ] + $options;
         unset($options[CURLOPT_COOKIEFILE]);
+        $request->setPostData($options[CURLOPT_POSTFIELDS]);
         $request->setOptions($options);
         $rollingCurl->add($request);
         unset($request);
