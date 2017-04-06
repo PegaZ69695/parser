@@ -31,7 +31,12 @@ abstract class ParserHtml extends ParserBase
     * */
     public function getDonorLinks()
     {
-        $this->items = $this->findDonorList();
+        $items = $this->findDonorList();
+        if (isset($items)) {
+            $this->items = $items;
+        }
+        unset($items);
+
         foreach ($this->items as $returnItem) {
             $this->provider->save(1, $returnItem['link'], $returnItem['categoryList'], $returnItem['data']);
         }
