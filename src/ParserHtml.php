@@ -135,8 +135,6 @@ abstract class ParserHtml extends ParserBase
 
     public function setCookie($url, $options = [])
     {
-        $results = false;
-
         $rollingCurl = new RollingCurl();
         if (!is_string($url)) {
             throw new \Exception('Need string url');
@@ -156,7 +154,7 @@ abstract class ParserHtml extends ParserBase
             $rollingCurl->execute();
             $results = true;
         } catch (\Exception $e) {
-
+            throw new \RuntimeException($e->getMessage());
         }
         unset($rollingCurl);
         return $results;
