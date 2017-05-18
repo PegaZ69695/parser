@@ -157,21 +157,7 @@ abstract class ParserBase
     {
         return $this->provider->findProduct('sku', "{$item['data']['sku']}");
     }
-
-    public static function recursive_array_search($needle, $haystack, $currentKey = '') {
-        foreach($haystack as $key=>$value) {
-            if (is_array($value)) {
-                $nextKey = self::recursive_array_search($needle,$value, $currentKey . '[' . $key . ']');
-                if ($nextKey) {
-                    return $nextKey;
-                }
-            }
-            else if($value==$needle) {
-                return is_numeric($key) ? (int)$key : $key;
-            }
-        }
-        return false;
-    }
+    
     
     public function getCurlPages($limit = false, $options = [], \Closure $closure)
     {
