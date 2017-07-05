@@ -3,12 +3,11 @@ namespace Parser;
 
 use RollingCurl\RollingCurl;
 use RollingCurl\Request;
-use Parser\DataProvider\DataProviderInterface;
 use InvalidArgumentException;
 
 /**
  *
- * @property DataProviderInterface $provider
+ * @property ParserServiceInterface $provider
  */
 abstract class ParserBase
 {
@@ -66,7 +65,7 @@ abstract class ParserBase
         return $this->currency;
     }
 
-    protected function setProvider(DataProviderInterface $provider)
+    protected function setProvider(ParserServiceInterface $provider)
     {
         $this->provider = $provider;
         return $this;
