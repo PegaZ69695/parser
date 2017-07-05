@@ -1,13 +1,5 @@
 <?php
-/**
- * Created by PhpStorm.
- * User: Администратор
- * Date: 14.02.2017
- * Time: 13:23
- */
-
 namespace Parser;
-
 
 abstract class ParserFile extends ParserBase
 {
@@ -16,17 +8,15 @@ abstract class ParserFile extends ParserBase
      * */
     public function getProductList()
     {
-        $this->items = $this->findProductList();
-        foreach ($this->items as $returnItem) {
-            $this->provider->save(3, $returnItem['link'], $returnItem['categoryList'], $returnItem['data']);
+        foreach ($this->findProductList() as $item) {
+            $this->_service->save(3, $item);
         }
-        $this->items = [];
-        return $this;
     }
 
-    /*
+    /**
      *  Этап 1
      *  Получение списка продуктов и сохранение в бд
+     * @return ParserItem[]
      * */
     abstract public function findProductList();
 }
