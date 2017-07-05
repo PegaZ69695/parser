@@ -8,155 +8,78 @@
 
 namespace Parser;
 
-use RollingCurl\Request;
-use RollingCurl\RollingCurl;
-
 abstract class ParserHtml extends ParserBase
 {
-    protected $cookiePath;
-
-    protected function setCookiePath($value)
-    {
-        $this->cookiePath = $value;
-    }
-
-    protected function getCookiePath()
-    {
-        return $this->cookiePath;
-    }
-
     /*
     *  Этап 1
     *  Получение ссылок для парсинга и сохранение в бд
     * */
     public function getDonorLinks()
     {
-        $items = $this->findDonorList();
-        if (isset($items)) {
-            $this->items = $items;
+        foreach ($this->findDonorList() as $item) {
+            $this->_service->save(1, $item);
         }
-        unset($items);
-
-        foreach ($this->items as $returnItem) {
-            $this->provider->save(1, $returnItem['link'], $returnItem['categoryList'], $returnItem['data']);
-        }
-        $this->items = [];
-        return $this;
     }
 
-    /*
+    /**
      *  Этап 2
      *  Получение ссылок на страницы категории и сохранение в бд
+     * @param null|int $limit
      * */
     public function getPagination($limit = null)
     {
-        $this->thisStatus = 0;
-        if (!$this->items = $this->provider->find(static::SEARCH_STRING, 1, self::STATUS_ACTIVE, $limit)) {
-            $this->thisStatus = 1;
-            return $this;
+        if (!$items = $this->_service->find($this->searchString, 1, ParserItem::STATUS_ACTIVE, $limit)) {
+            $this->status = self::STATUS_SUCCESS;
+            return;
         }
 
-        switch (static::PARSER_TYPE) {
-            case self::PARSER_TYPE_DEFAULT:
-                /*   code */
-                break;
-            case self::PARSER_TYPE_CURL:
-                $this->getCurlPages(false, $this->getCurlOptions(),
-                    function(Request $request) {
-                        $item = $request->getExtraInfo();
-                        $returnItems = $this->findDonorPagination($request->getResponseText(), $item);
-                        foreach ($returnItems as $returnItem) {
-                            $this->provider->save(2, $returnItem['link'], $returnItem['categoryList'], $returnItem['data']);
-                        }
-                        $this->provider->update($item['id']);
-                    });
-                break;
-
+        foreach ($this->_transport->bathSend($items) as $transportValue) {
+            foreach ($this->findDonorPagination($transportValue->responseText, $transportValue->item) as $item) {
+                $this->_service->save(2, $item);
+            }
+            $this->_service->update($transportValue->item->id);
         }
-        return $this;
     }
 
-    /* @TODO Этап 2 и 3 можно совместить подумать как!
+    /**
      *  Этап 3
      *  Получение списка продуктов и сохранение в бд
+     * @param null|int $limit
      * */
     public function getProductList($limit = null)
     {
-        $this->thisStatus = 0;
-        if (!$this->items = $this->provider->find(static::SEARCH_STRING, 2, self::STATUS_ACTIVE, $limit)) {
-            $this->thisStatus = 1;
-            return $this;
+        if (!$items = $this->_service->find($this->searchString, 2, ParserItem::STATUS_ACTIVE, $limit)) {
+            $this->status = self::STATUS_SUCCESS;
+            return;
         }
-
-        switch (static::PARSER_TYPE) {
-            case self::PARSER_TYPE_DEFAULT:
-                /*   code */
-                break;
-            case self::PARSER_TYPE_CURL:
-                $this->getCurlPages(false, $this->getCurlOptions(),
-                    function(Request $request) {
-                        $item = $request->getExtraInfo();
-
-                        if (!trim($request->getResponseText())) {
-                            $this->provider->update($item['id'], self::STATUS_ERROR);
-                            unset($this->items[$request->getExtraInfo()['key']]);
-                            throw new \RuntimeException(sprintf('Request URL:%s' . PHP_EOL . 'Status Code:%s' . PHP_EOL . 'Error text:%s', $request->getUrl(),  $request->getResponseInfo()['http_code'], $request->getResponseError()));
-                        }
-
-                        $returnItems = $this->findProductList($request->getResponseText(), $item);
-                        foreach ($returnItems as $returnItem) {
-                            $this->provider->save(3, $returnItem['link'], $returnItem['categoryList'], $returnItem['data']);
-                        }
-                        $this->provider->update($item['id']);
-                        unset($item, $returnItems, $request);
-                    });
-                break;
+        foreach ($this->_transport->bathSend($items) as $transportValue) {
+            foreach ($this->findProductList($transportValue->responseText, $transportValue->item) as $item) {
+                $this->_service->save(3, $item);
+            }
+            $this->_service->update($transportValue->item->id);
         }
-        return $this;
     }
 
-    /*
-     * Поиск всех ссылок категорий для парсинга
-     * Этап 1
-     * */
+    /**
+     * @return ParserItem[]
+     */
     abstract public function findDonorList();
 
-    /*
+    /**
      * Получение ссылок на страницы категории
      * Этап 2
+     * @param string $document
+     * @param ParserItem $item
+     * @return ParserItem[]
      * */
-    abstract public function findDonorPagination($htmlText, $item);
+    abstract public function findDonorPagination($document, ParserItem $item);
 
-    /*
+    /**
      *  Этап 3
      *  Получение списка продуктов и сохранение в бд
+     * @param string $document
+     * @param ParserItem $item
+     * @return ParserItem[]
      * */
-    abstract public function findProductList($htmlText, $item);
-
-    public function setCookie($url, $options = [])
-    {
-        $rollingCurl = new RollingCurl();
-        if (!is_string($url)) {
-            throw new \Exception('Need string url');
-        }
-        $request = new Request($url, 'POST');
-        $options = $this->getCurlOptions() + [
-            CURLOPT_HEADER => true,
-            CURLOPT_NOBODY => true,
-            CURLOPT_COOKIEJAR => $this->getCookiePath()
-        ] + $options;
-        unset($options[CURLOPT_COOKIEFILE]);
-        $request->setPostData($options[CURLOPT_POSTFIELDS]);
-        $request->setOptions($options);
-        $rollingCurl->add($request);
-        unset($request);
-        try {
-            $rollingCurl->execute();
-            $results = true;
-        } catch (\Exception $e) {
-            throw new \RuntimeException($e->getMessage());
-        }
-        unset($rollingCurl);
-        return $results;
-    }
+    abstract public function findProductList($document, ParserItem $item);
 }

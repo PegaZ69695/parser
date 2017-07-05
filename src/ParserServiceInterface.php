@@ -8,26 +8,24 @@ interface ParserServiceInterface
 
     /**
      * @param int $type
-     * @param string $link
-     * @param string $categoryList
-     * @param null|array $data
+     * @param ParserItem $item
      * @return void
      */
-    public function save($type, $link, $categoryList, $data = null);
+    public function save($type, ParserItem $item);
 
     /**
      * @param int $id
      * @param int $status
      * @return void
      */
-    public function update($id, $status);
+    public function update($id, $status = ParserItem::STATUS_SUCCESS);
 
     /**
      * @param string $like_
      * @param int $type_
      * @param bool $active
      * @param null|int $limit
-     * @return array
+     * @return ParserItem[]
      */
     public function find($like_, $type_, $active = false, $limit = null);
     /**

@@ -1,74 +1,25 @@
 <?php
 namespace Parser;
 
-use RollingCurl\RollingCurl;
-use RollingCurl\Request;
-use InvalidArgumentException;
+use Parser\Product\ProductModel;
 
-/**
- *
- * @property ParserServiceInterface $provider
- */
 abstract class ParserBase
 {
-    public $items = [];
-    public $thisStatus = 0;
-    protected $itemPosition = 0;
-    protected $productsToAdd = [];
-    protected $productsToUpdate = [];
-    protected $provider;
-
-    protected $_mainCategoryId;
-    protected $_vendorId;
-    
-    public $currency = 1;
-    const PARSER_TYPE_CURL = 'curl';
-    const PARSER_TYPE_DEFAULT = 'default';
     const STATUS_ACTIVE = 0;
-    const STATUS_INACTIVE = 1;
-    const STATUS_ERROR = 2;
-    const PARSER_TYPE = 'default';
+    const STATUS_SUCCESS = 1;
 
-    const SEARCH_STRING = null;
+    public $searchString;
+    public $downloadPageWhenAdding = true;
+    public $downloadPageWhenUpdate = false;
+    public $status = self::STATUS_ACTIVE;
 
-    const LOAD_PAGE_TO_ADD = true;
-    const LOAD_PAGE_TO_UPDATE = false;
+    protected $_service;
+    protected $_transport;
 
-    public function __construct($config =  [])
+    public function __construct(ParserServiceInterface $service, TransportInterface $transport)
     {
-        if (!empty($config)) {
-            self::configure($this, $config);
-        }
-    }
-
-    public function getVendorId()
-    {
-        return $this->_vendorId;
-    }
-
-    public static function configure($object, $properties)
-    {
-        foreach ($properties as $name => $value) {
-            $object->$name = $value;
-        }
-
-        return $object;
-    }
-
-    protected function setCurrency($value = 1)
-    {
-        $this->currency = $value;
-    }
-
-    protected function getCurrency()
-    {
-        return $this->currency;
-    }
-
-    protected function setProvider(ParserServiceInterface $provider)
-    {
-        $this->provider = $provider;
-        return $this;
+        $this->_service = $service;
+        $this->_transport = $transport;
     }
 
     /*
@@ -76,149 +27,93 @@ abstract class ParserBase
      *  Очистка базы
      * */
     public function clearDb(){
-        $this->provider->clearDb();
+        $this->_service->clearDb();
         return $this;
     }
 
-    /*
-     *  Этап 4
-     *  Получение данных продукта и сохранение или обновление в бд
-     * */
+
+    /**
+     * @param null|null $limit
+     */
     public function getProduct($limit = null)
     {
-        $this->thisStatus = 0;
-        if (!$this->items = $this->provider->find(static::SEARCH_STRING, 3, self::STATUS_ACTIVE, $limit)) {
-            $this->thisStatus = 1;
-            return $this;
+        if (!$items = $this->_service->find($this->searchString, 3, ParserItem::STATUS_ACTIVE, $limit)) {
+            $this->status = self::STATUS_SUCCESS;
+            return;
         }
 
-        foreach ($this->items as $key => $item) {
+        $addProducts = [];
+        $updateProducts = [];
+
+        foreach ($items as $key => $item) {
             $productId = $this->findProduct($item);
             if ($productId) {
-                $item['productId'] = $productId;
-                $this->productsToUpdate[] = $item;
+                $item->productId = $productId;
+                $updateProducts[] = $item;
             } else {
-                $this->productsToAdd[] = $item;
+                $addProducts[] = $item;
             }
-            unset($this->items[$key]);
         }
-        if (static::LOAD_PAGE_TO_UPDATE) {
-            switch (static::PARSER_TYPE) {
-                case self::PARSER_TYPE_DEFAULT:
-                    /*   code */
-                    break;
-                case self::PARSER_TYPE_CURL:
-                    $this->items = $this->productsToUpdate;
-                    $this->productsToUpdate = [];
-                    $this->getCurlPages(false, $this->getCurlOptions(),
-                        function(Request $request) {
-                            $item = $request->getExtraInfo();
-                            $this->updateProduct($request->getResponseText(), $item);
-                            $this->provider->update($item['id']);
-                        });
-                    break;
+        unset($items);
+
+        $this->addAndUpdateProduct($updateProducts, $addProducts);
+    }
+
+    /**
+     * @param ParserItem[] $updateProducts
+     * @param ParserItem[] $addProducts
+     */
+    private function addAndUpdateProduct($updateProducts, $addProducts)
+    {
+        if ($this->downloadPageWhenUpdate) {
+            foreach ($this->_transport->bathSend($updateProducts) as $transportValue) {
+                $product = $this->updateProduct($transportValue->responseText, $transportValue->item);
+                $this->_service->updateProduct($product);
+                $this->_service->update($transportValue->item->id);
             }
         } else {
-            foreach ($this->productsToUpdate as $key => $item) {
-                $this->updateProduct(null, $item);
-                $this->provider->update($item['id']);
-                unset($this->productsToUpdate[$key]);
+            foreach ($updateProducts as $item) {
+                $product = $this->updateProduct(null, $item);
+                $this->_service->updateProduct($product);
+                $this->_service->update($item->id);
             }
         }
-        if (static::LOAD_PAGE_TO_ADD) {
-            switch (static::PARSER_TYPE) {
-                case self::PARSER_TYPE_DEFAULT:
-                    /*   code */
-                    break;
-                case self::PARSER_TYPE_CURL:
-                    $this->items = $this->productsToAdd;
-                    $this->productsToAdd = [];
-                    $this->getCurlPages(false, $this->getCurlOptions(),
-                        function(Request $request) {
-                            $item = $request->getExtraInfo();
-                            $this->addProduct($request->getResponseText(), $item);
-                            $this->provider->update($item['id']);
-                        });
-                    break;
+        unset($updateProducts);
+
+        if ($this->downloadPageWhenAdding) {
+            foreach ($this->_transport->bathSend($addProducts) as $transportValue) {
+                $product = $this->addProduct($transportValue->responseText, $transportValue->item);
+                $this->_service->addProduct($product);
+                $this->_service->update($transportValue->item->id);
             }
         } else {
-            foreach ($this->productsToAdd as $key => $item) {
-                $this->addProduct(null, $item);
-                $this->provider->update($item['id']);
-                unset($this->productsToAdd[$key]);
+            foreach ($addProducts as $item) {
+                $product = $this->updateProduct(null, $item);
+                $this->_service->updateProduct($product);
+                $this->_service->update($item->id);
             }
         }
-
-        return $this;
+        unset($addProducts);
     }
-    
-    protected function findProduct($item)
+
+    protected function findProduct(ParserItem $item)
     {
-        return $this->provider->findProduct('sku', "{$item['data']['sku']}");
-    }
-    
-    
-    public function getCurlPages($limit = false, $options = [], \Closure $closure)
-    {
-        if (!is_array($this->items)) {
-            throw new InvalidArgumentException(sprintf('this items expects to be array, %s given', gettype($this->items)));
-        }
-
-        $results = [];
-        $postData = [];
-
-        if (isset($options[CURLOPT_POSTFIELDS])) {
-            $postData = $options[CURLOPT_POSTFIELDS];
-            unset($options[CURLOPT_POSTFIELDS]);
-        }
-
-        $rollingCurl = new RollingCurl();
-
-        foreach ($this->items as $key => $item) {
-            $request = new Request($item['link'], 'POST');
-            $request->setPostData($postData);
-            $item['key'] = $key;
-            $request->setExtraInfo($item);
-            $rollingCurl->add(
-                $request->addOptions($options)
-            );
-        }
-        
-        $rollingCurl->setCallback(function(Request $request, RollingCurl $rollingCurl) use (&$results, &$closure) {
-            if ($request->getResponseInfo()['http_code'] >= 400) {
-                $this->provider->update($request->getExtraInfo()['id'], self::STATUS_ERROR);
-                throw new \RuntimeException(sprintf('Request URL:%s' . PHP_EOL . 'Status Code:%s', $request->getUrl(),  $request->getResponseInfo()['http_code']));
-            }
-
-            if (!empty($closure)) {
-                $closure($request, $rollingCurl);
-            } else {
-                $results[] = $request->getResponseText();
-            }
-            unset($this->items[$request->getExtraInfo()['key']]);
-            $rollingCurl->clearCompleted();
-            $rollingCurl->prunePendingRequestQueue();
-        });
-        if ($limit) {
-            $rollingCurl->setSimultaneousLimit($limit);
-        }
-        
-        $rollingCurl->execute();
-
-        return $results;
+        return $this->_service->findProduct(['sku' => $item->data['sku']]);
     }
 
-    /*
-     *  Этап 4.add
-     *  Получение данных продукта и сохранение в бд
-     * */
-    abstract public function addProduct($htmlText, $item);
+    /**
+     * @param string $document
+     * @param ParserItem $item
+     * @return ProductModel
+     */
+    abstract public function addProduct($document, $item);
 
-    /*
-     *  Этап 4.update
-     *  Обновление данных продукта бд
-     * */
-    abstract public function updateProduct($htmlText, $item);
+    /**
+     * @param string $document
+     * @param ParserItem $item
+     * @return ProductModel
+     */
+    abstract public function updateProduct($document, $item);
 
     /**
      * Отключение продуктов каторые не были обновлены в течении $day дней
@@ -229,10 +124,12 @@ abstract class ParserBase
      * */
     public function disableOldProduct($vendorId, $days = 1)
     {
-        return $this->provider->disableOldProduct($vendorId, $days);
+        return $this->_service->disableOldProduct($vendorId, $days);
     }
 
-
+    /**
+     * @return array
+     */
     public function getCurlOptions(){
         return [];
     }
